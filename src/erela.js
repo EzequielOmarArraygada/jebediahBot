@@ -26,9 +26,45 @@ const manager = new Manager({
   },
 });
 
-manager.on('nodeConnect', node => console.log(`[Lavalink] Nodo conectado: ${node.options.host}:${node.options.port}`));
-manager.on('nodeError', (node, error) => console.error(`[Lavalink] Error en nodo: ${node.options.host}:${node.options.port}`, error));
-manager.on('nodeDisconnect', node => console.warn(`[Lavalink] Nodo desconectado: ${node.options.host}:${node.options.port}`));
+// Logs detallados para debugging
+manager.on('nodeConnect', node => {
+  console.log(`[Lavalink] Nodo conectado: ${node.options.host}:${node.options.port}`);
+  console.log(`[DEBUG] Versión de erela.js: ${require('erela.js/package.json').version}`);
+});
+
+manager.on('nodeError', (node, error) => {
+  console.error(`[Lavalink] Error en nodo: ${node.options.host}:${node.options.port}`, error);
+  console.error(`[DEBUG] Stack trace completo:`, error.stack);
+  
+  // Log adicional para entender el contexto del error
+  if (error.message && error.message.includes('Unexpected op')) {
+    console.error(`[DEBUG] Error de protocolo detectado. Posible incompatibilidad de versiones.`);
+    console.error(`[DEBUG] erela.js versión: ${require('erela.js/package.json').version}`);
+    console.error(`[DEBUG] Lavalink versión esperada: v3.x`);
+  }
+});
+
+manager.on('nodeDisconnect', node => {
+  console.warn(`[Lavalink] Nodo desconectado: ${node.options.host}:${node.options.port}`);
+  console.log(`[DEBUG] Razón de desconexión: ${node.disconnectReason || 'Desconocida'}`);
+});
+
+// Logs adicionales para eventos del manager
+manager.on('playerCreate', player => {
+  console.log(`[DEBUG] Player creado para guild: ${player.guild}`);
+});
+
+manager.on('playerDestroy', player => {
+  console.log(`[DEBUG] Player destruido para guild: ${player.guild}`);
+});
+
+manager.on('trackStart', (player, track) => {
+  console.log(`[DEBUG] Track iniciado: ${track.title} en guild: ${player.guild}`);
+});
+
+manager.on('trackEnd', (player, track) => {
+  console.log(`[DEBUG] Track terminado: ${track.title} en guild: ${player.guild}`);
+});
 
 function setClient(discordClient) {
   client = discordClient;
