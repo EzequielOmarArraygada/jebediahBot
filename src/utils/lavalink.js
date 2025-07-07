@@ -4,7 +4,7 @@ async function searchYouTubeLavalink(query) {
     const host = process.env.LAVALINK_HOST;
     const port = process.env.LAVALINK_PORT;
     const password = process.env.LAVALINK_PASSWORD;
-    const url = `http://${host}:${port}/v3/loadtracks?identifier=ytsearch:${encodeURIComponent(query)}`;
+    const url = `http://${host}:${port}/loadtracks?identifier=ytsearch:${encodeURIComponent(query)}`;
 
     console.log('[Lavalink][DEBUG] URL:', url);
     const res = await fetch(url, {
