@@ -4,6 +4,8 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@d
 const fs = require('fs');
 const path = require('path');
 const { manager, setClient } = require('./erela');
+const http = require('http');
+const PORT = process.env.PORT || 3000;
 
 
 // Configuración del cliente
@@ -67,4 +69,11 @@ client.once('ready', () => {
 });
 
 // Login del bot
-client.login(process.env.DISCORD_TOKEN); 
+client.login(process.env.DISCORD_TOKEN);
+
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('OK');
+}).listen(PORT, () => {
+  console.log(`Healthcheck server running on port ${PORT}`);
+}); 
