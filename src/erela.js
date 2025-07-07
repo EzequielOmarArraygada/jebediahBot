@@ -16,9 +16,7 @@ const manager = new Manager({
       host: process.env.LAVALINK_HOST,
       port: Number(process.env.LAVALINK_PORT),
       password: process.env.LAVALINK_PASSWORD,
-      secure: false, // Railway no usa SSL por defecto
-      retryAmount: 3,
-      retryDelay: 5000,
+      secure: false,
     },
   ],
   send(id, payload) {
@@ -26,9 +24,6 @@ const manager = new Manager({
     const guild = client.guilds.cache.get(id);
     if (guild) guild.shard.send(payload);
   },
-  // Configuración específica para Lavalink v3
-  defaultSearchPlatform: "ytsearch",
-  autoPlay: true,
 });
 
 manager.on('nodeConnect', node => console.log(`[Lavalink] Nodo conectado: ${node.options.host}:${node.options.port}`));
