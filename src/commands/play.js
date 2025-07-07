@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { searchYouTubeLavalink } = require('../utils/lavalink');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -24,6 +25,13 @@ module.exports = {
                 return interaction.editReply({ content: '❌ El servidor de música no está disponible en este momento.', flags: 64 });
             }
 
+            // Buscar canción en YouTube usando Lavalink
+            const tracks = await searchYouTubeLavalink(query);
+            if (!tracks.length) {
+                return interaction.editReply({ content: '❌ No se encontraron resultados en YouTube.', flags: 64 });
+            }
+            const track = tracks[0];
+
             // Obtener o crear player
             let player = interaction.client.lavalink.players.get(guild.id);
             if (!player) {
@@ -33,8 +41,14 @@ module.exports = {
                 }
             }
 
-            // Por ahora, solo confirmar que el comando funciona
-            return interaction.editReply({ content: `🎶 Comando recibido: **${query}**\n\n⚠️ Funcionalidad de reproducción en desarrollo.`, flags: 64 });
+            // Enviar payload para reproducir el track
+            interaction.client.lavalink.send('play', {
+                guildId: guild.id,
+                track: track.encoded,
+                noReplace: false
+            });
+
+            return interaction.editReply({ content: `🎶 Reproduciendo: **${track.info.title}**\n${track.info.uri}`, flags: 64 });
             
         } catch (error) {
             console.error('[ERROR] Error en comando play:', error);
