@@ -3,12 +3,13 @@ const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
 const fs = require('fs');
 const path = require('path');
-const { manager, setClient } = require('./erela');
+const { kazagumo, shoukaku, setClient } = require('./erela');
 const http = require('http');
 
-// Log de versiones para debugging (solo erela.js)
+// Log de versiones para debugging
 console.log('[DEBUG] Versiones de dependencias:');
-console.log(`[DEBUG] erela.js: ${require('erela.js/package.json').version}`);
+console.log(`[DEBUG] shoukaku: ${require('shoukaku/package.json').version}`);
+console.log(`[DEBUG] kazagumo: ${require('kazagumo/package.json').version}`);
 console.log(`[DEBUG] Node.js: ${process.version}`);
 
 // Configuración del cliente
@@ -21,7 +22,6 @@ const client = new Client({
         GatewayIntentBits.GuildMembers
     ]
 });
-
 
 // Colecciones para comandos y colas de música
 client.commands = new Collection();
@@ -63,9 +63,10 @@ process.on('uncaughtException', error => {
 });
 
 setClient(client);
-client.manager = manager;
+client.kazagumo = kazagumo;
+client.shoukaku = shoukaku;
 
-client.on('raw', (d) => client.manager.updateVoiceState(d));
+client.on('raw', (d) => shoukaku.connector.updateVoiceState(d));
 
 // Health check server - Railway asigna el puerto automáticamente
 const PORT = process.env.PORT || 8080;
@@ -85,7 +86,6 @@ http.createServer((req, res) => {
 client.once('ready', () => {
   console.log('✅ Jebediah#1533 está listo y conectado a Discord!');
   console.log('🎵 Bot de música activo en', client.guilds.cache.size, 'servidores');
-  client.manager.init(client.user.id);
 });
 
 // Login del bot

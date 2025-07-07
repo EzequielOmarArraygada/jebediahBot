@@ -22,7 +22,8 @@
     "@discordjs/voice": "^0.16.1",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
-    "erela.js": "^2.4.0"
+    "shoukaku": "^3.6.0",
+    "kazagumo": "^2.2.5"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

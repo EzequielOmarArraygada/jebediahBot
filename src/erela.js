@@ -1,4 +1,5 @@
-const { Manager } = require('erela.js');
+const { Shoukaku, Connectors } = require('shoukaku');
+const { Kazagumo, Plugins } = require('kazagumo');
 const { Client } = require('discord.js');
 
 // El cliente de Discord debe ser pasado desde index.js
@@ -10,37 +11,43 @@ console.log('Configuración de Lavalink:', {
   password: process.env.LAVALINK_PASSWORD,
 });
 
-const manager = new Manager({
-  nodes: [
-    {
-      host: process.env.LAVALINK_HOST,
-      port: Number(process.env.LAVALINK_PORT),
-      password: process.env.LAVALINK_PASSWORD,
-      secure: false,
-    },
-  ],
-  send(id, payload) {
+// Configuración de Shoukaku
+const shoukaku = new Shoukaku(new Connectors.DiscordJS(client), [
+  {
+    name: 'lavalink',
+    url: `${process.env.LAVALINK_HOST}:${process.env.LAVALINK_PORT}`,
+    auth: process.env.LAVALINK_PASSWORD,
+    secure: false
+  }
+]);
+
+// Configuración de Kazagumo
+const kazagumo = new Kazagumo({
+  defaultSearchEngine: 'youtube',
+  send: (guildId, payload) => {
     if (!client) return;
-    const guild = client.guilds.cache.get(id);
+    const guild = client.guilds.cache.get(guildId);
     if (guild) guild.shard.send(payload);
-  },
-});
+  }
+}, shoukaku);
 
 // Logs básicos para debugging
-manager.on('nodeConnect', node => {
-  console.log(`[Lavalink] Nodo conectado: ${node.options.host}:${node.options.port}`);
+shoukaku.on('ready', (name) => {
+  console.log(`[Lavalink] Nodo ${name} conectado`);
 });
 
-manager.on('nodeError', (node, error) => {
-  console.error(`[Lavalink] Error en nodo: ${node.options.host}:${node.options.port}`, error.message);
+shoukaku.on('error', (name, error) => {
+  console.error(`[Lavalink] Error en nodo ${name}:`, error.message);
 });
 
-manager.on('nodeDisconnect', node => {
-  console.warn(`[Lavalink] Nodo desconectado: ${node.options.host}:${node.options.port}`);
+shoukaku.on('close', (name, code, reason) => {
+  console.warn(`[Lavalink] Nodo ${name} desconectado: ${code} - ${reason}`);
 });
 
 function setClient(discordClient) {
   client = discordClient;
+  // Actualizar el connector con el cliente
+  shoukaku.connector.client = discordClient;
 }
 
-module.exports = { manager, setClient }; 
+module.exports = { kazagumo, shoukaku, setClient }; 
