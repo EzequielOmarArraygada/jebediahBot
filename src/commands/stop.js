@@ -10,30 +10,30 @@ module.exports = {
             const { guild, member } = interaction;
 
             if (!member.voice.channel) {
-                return interaction.reply({ content: '❌ Debes estar en un canal de voz para usar este comando!', ephemeral: true });
+                return interaction.reply({ content: '❌ Debes estar en un canal de voz para usar este comando!', flags: 64 });
             }
 
             await interaction.deferReply();
 
-            // Verificar que Lavalink esté conectado
-            if (!interaction.client.lavalink.connected) {
-                return interaction.editReply({ content: '❌ El servidor de música no está disponible en este momento.', ephemeral: true });
+            // Validar lavalink y players
+            if (!interaction.client.lavalink || !interaction.client.lavalink.connected || !interaction.client.lavalink.players) {
+                return interaction.editReply({ content: '❌ El servidor de música no está disponible en este momento.', flags: 64 });
             }
 
             // Obtener player
             const player = interaction.client.lavalink.players.get(guild.id);
             if (!player) {
-                return interaction.editReply({ content: '❌ No hay nada reproduciéndose.', ephemeral: true });
+                return interaction.editReply({ content: '❌ No hay nada reproduciéndose.', flags: 64 });
             }
 
             // Destruir player
             interaction.client.lavalink.destroyPlayer(guild.id);
 
-            return interaction.editReply({ content: '⏹️ Reproducción detenida y cola limpiada.' });
+            return interaction.editReply({ content: '⏹️ Reproducción detenida y cola limpiada.', flags: 64 });
             
         } catch (error) {
             console.error('[ERROR] Error en comando stop:', error);
-            return interaction.editReply({ content: '❌ Ocurrió un error al procesar el comando.', ephemeral: true });
+            return interaction.editReply({ content: '❌ Ocurrió un error al procesar el comando.', flags: 64 });
         }
     },
 }; 
