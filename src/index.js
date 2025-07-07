@@ -3,7 +3,6 @@ const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
 const fs = require('fs');
 const path = require('path');
-const { lavalink, setClient } = require('./erela');
 const http = require('http');
 
 // Log de versiones para debugging
@@ -60,9 +59,6 @@ process.on('unhandledRejection', error => {
 process.on('uncaughtException', error => {
     console.error('Excepción no capturada:', error);
 });
-
-setClient(client);
-client.lavalink = lavalink;
 
 // Health check server - Railway asigna el puerto automáticamente
 const PORT = process.env.PORT || 8080;
