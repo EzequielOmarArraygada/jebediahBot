@@ -6,12 +6,15 @@ async function searchYouTubeLavalink(query) {
     const password = process.env.LAVALINK_PASSWORD;
     const url = `http://${host}:${port}/v3/loadtracks?identifier=ytsearch:${encodeURIComponent(query)}`;
 
+    console.log('[Lavalink][DEBUG] URL:', url);
     const res = await fetch(url, {
         headers: {
             'Authorization': password,
             'Accept': 'application/json',
         }
     });
+    console.log('[Lavalink][DEBUG] Status:', res.status, res.statusText);
+    console.log('[Lavalink][DEBUG] Headers:', JSON.stringify(Object.fromEntries(res.headers.entries()), null, 2));
     if (!res.ok) throw new Error('No se pudo buscar en Lavalink');
     const data = await res.json();
     console.log('[Lavalink][DEBUG] Respuesta búsqueda:', JSON.stringify(data, null, 2));
