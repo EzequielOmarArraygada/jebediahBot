@@ -7,40 +7,38 @@ module.exports = {
 
     async execute(interaction) {
         const guild = interaction.guild;
-        const queue = interaction.client.musicQueues.get(guild.id);
+        const player = interaction.client.manager.players.get(guild.id);
 
-        if (!queue || (queue.isQueueEmpty() && !queue.getCurrentTrack())) {
+        if (!player || (!player.queue.current && player.queue.size === 0)) {
             return interaction.reply({
                 content: '❌ No hay música en la cola!',
                 ephemeral: true
             });
         }
 
-        const currentTrack = queue.getCurrentTrack();
-        const queueList = queue.getQueue();
         const embed = new EmbedBuilder()
             .setColor('#3498db')
             .setTitle('🎵 Cola de Reproducción')
             .setTimestamp();
 
         // Mostrar canción actual
-        if (currentTrack) {
+        if (player.queue.current) {
             embed.addFields({
                 name: '🎵 Reproduciendo ahora:',
-                value: `**${currentTrack.title}**\nDuración: ${formatDuration(currentTrack.duration)}\nSolicitado por: ${currentTrack.requestedBy.username}`,
+                value: `**${player.queue.current.title}**\nDuración: ${formatDuration(player.queue.current.duration / 1000)}\nSolicitado por: ${player.queue.current.requester?.username || 'Desconocido'}`,
                 inline: false
             });
         }
 
         // Mostrar cola
-        if (queueList.length > 0) {
+        if (player.queue.size > 0) {
             let queueText = '';
-            queueList.slice(0, 10).forEach((track, index) => {
-                queueText += `**${index + 1}.** ${track.title} - ${formatDuration(track.duration)}\n`;
+            player.queue.slice(0, 10).forEach((track, index) => {
+                queueText += `**${index + 1}.** ${track.title} - ${formatDuration(track.duration / 1000)}\n`;
             });
 
-            if (queueList.length > 10) {
-                queueText += `\n... y ${queueList.length - 10} canciones más`;
+            if (player.queue.size > 10) {
+                queueText += `\n... y ${player.queue.size - 10} canciones más`;
             }
 
             embed.addFields({
@@ -50,7 +48,7 @@ module.exports = {
             });
         }
 
-        embed.setFooter({ text: `Total: ${queueList.length} canciones en cola` });
+        embed.setFooter({ text: `Total: ${player.queue.size} canciones en cola` });
 
         await interaction.reply({ embeds: [embed] });
     },

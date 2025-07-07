@@ -1,9 +1,9 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
-const play = require('play-dl');
 const fs = require('fs');
 const path = require('path');
+const { manager, setClient } = require('./erela');
 
 
 // Configuración del cliente
@@ -17,17 +17,6 @@ const client = new Client({
     ]
 });
 
-
-// Configuración de la API Key y cookie de YouTube para play-dl
-if (process.env.YOUTUBE_API_KEY || process.env.YOUTUBE_COOKIE) {
-    play.setToken({
-        youtube: {
-            cookie: process.env.YOUTUBE_COOKIE || '',
-            identityToken: '',
-            apiKey: process.env.YOUTUBE_API_KEY || ''
-        }
-    });
-}
 
 // Colecciones para comandos y colas de música
 client.commands = new Collection();
@@ -66,6 +55,15 @@ process.on('unhandledRejection', error => {
 
 process.on('uncaughtException', error => {
     console.error('Excepción no capturada:', error);
+});
+
+setClient(client);
+client.manager = manager;
+
+client.on('raw', (d) => client.manager.updateVoiceState(d));
+
+client.once('ready', () => {
+  client.manager.init(client.user.id);
 });
 
 // Login del bot

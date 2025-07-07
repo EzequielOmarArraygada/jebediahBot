@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -7,17 +7,15 @@ module.exports = {
 
     async execute(interaction) {
         const guild = interaction.guild;
-        const queue = interaction.client.musicQueues.get(guild.id);
+        const player = interaction.client.manager.players.get(guild.id);
 
-        // Verificar si hay una cola de música
-        if (!queue || !queue.getCurrentTrack()) {
+        if (!player || !player.queue.current) {
             return interaction.reply({
                 content: '❌ No hay música reproduciéndose actualmente!',
                 ephemeral: true
             });
         }
 
-        // Verificar si el usuario está en el mismo canal de voz
         if (!interaction.member.voice.channel) {
             return interaction.reply({
                 content: '❌ Debes estar en un canal de voz para usar este comando!',
@@ -25,16 +23,12 @@ module.exports = {
             });
         }
 
-        const isLooping = queue.toggleLoop();
+        // Alternar el modo de repetición de la canción actual
+        player.setTrackRepeat(!player.trackRepeat);
+        const isLooping = player.trackRepeat;
 
-        const embed = new EmbedBuilder()
-            .setColor(isLooping ? '#e74c3c' : '#2ecc71')
-            .setTitle(isLooping ? '🔁 Loop activado' : '🔁 Loop desactivado')
-            .setDescription(isLooping ? 
-                'La canción actual se repetirá automáticamente.' : 
-                'La reproducción en bucle ha sido desactivada.')
-            .setTimestamp();
-
-        await interaction.reply({ embeds: [embed] });
+        return interaction.reply({
+            content: isLooping ? '🔁 Loop activado: la canción actual se repetirá.' : '🔁 Loop desactivado: reproducción normal.'
+        });
     },
 }; 
