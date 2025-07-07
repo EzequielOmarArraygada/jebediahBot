@@ -68,15 +68,12 @@ client.manager = manager;
 
 client.on('raw', (d) => client.manager.updateVoiceState(d));
 
-client.once('ready', () => {
-  client.manager.init(client.user.id);
-});
-
-// Login del bot
-client.login(process.env.DISCORD_TOKEN);
-
 // Health check server - Railway asigna el puerto automáticamente
 const PORT = process.env.PORT || 8080;
+
+// Variable para trackear si el bot está listo
+let botReady = false;
+
 http.createServer((req, res) => {
   // Log de la petición para debugging
   console.log(`[HEALTH] Petición recibida: ${req.method} ${req.url}`);
@@ -92,19 +89,19 @@ http.createServer((req, res) => {
     return;
   }
   
-  // Respuesta del health check
+  // Respuesta del health check - siempre responde OK para evitar que Railway mate el contenedor
   const healthData = {
-    status: 'OK',
+    status: botReady ? 'READY' : 'STARTING',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     memory: process.memoryUsage(),
     lavalink: {
-      connected: client.manager.nodes.size > 0,
-      nodes: Array.from(client.manager.nodes.values()).map(node => ({
+      connected: client.manager ? client.manager.nodes.size > 0 : false,
+      nodes: client.manager ? Array.from(client.manager.nodes.values()).map(node => ({
         host: node.options.host,
         port: node.options.port,
         connected: node.connected
-      }))
+      })) : []
     }
   };
   
@@ -113,4 +110,15 @@ http.createServer((req, res) => {
 }).listen(PORT, () => {
   console.log(`Healthcheck server running on port ${PORT}`);
   console.log(`[HEALTH] Endpoint disponible en: http://localhost:${PORT}/`);
-}); 
+});
+
+// Marcar el bot como listo cuando se conecte a Discord
+client.once('ready', () => {
+  console.log('✅ Jebediah#1533 está listo y conectado a Discord!');
+  console.log('🎵 Bot de música activo en', client.guilds.cache.size, 'servidores');
+  botReady = true;
+  client.manager.init(client.user.id);
+});
+
+// Login del bot
+client.login(process.env.DISCORD_TOKEN); 
