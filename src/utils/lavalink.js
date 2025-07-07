@@ -14,6 +14,7 @@ async function searchYouTubeLavalink(query) {
     });
     if (!res.ok) throw new Error('No se pudo buscar en Lavalink');
     const data = await res.json();
+    console.log('[Lavalink][DEBUG] Respuesta búsqueda:', JSON.stringify(data, null, 2));
     return data.tracks && data.tracks.length > 0 ? data.tracks : [];
 }
 
