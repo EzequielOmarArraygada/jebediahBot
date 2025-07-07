@@ -5,7 +5,7 @@ const { Client } = require('discord.js');
 let client = null;
 
 console.log('Configuración de Lavalink:', {
-  host: lavalink.railway.internal,
+  host: "lavalink.railway.internal",
   port: process.env.LAVALINK_PORT,
   password: process.env.LAVALINK_PASSWORD,
 });
