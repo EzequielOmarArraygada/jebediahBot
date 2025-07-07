@@ -3,13 +3,12 @@ const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
 const fs = require('fs');
 const path = require('path');
-const { kazagumo, shoukaku, setClient } = require('./erela');
+const { lavalink, setClient } = require('./erela');
 const http = require('http');
 
 // Log de versiones para debugging
 console.log('[DEBUG] Versiones de dependencias:');
-console.log(`[DEBUG] shoukaku: ${require('shoukaku/package.json').version}`);
-console.log(`[DEBUG] kazagumo: ${require('kazagumo/package.json').version}`);
+console.log(`[DEBUG] ws: ${require('ws/package.json').version}`);
 console.log(`[DEBUG] Node.js: ${process.version}`);
 
 // Configuración del cliente
@@ -63,10 +62,7 @@ process.on('uncaughtException', error => {
 });
 
 setClient(client);
-client.kazagumo = kazagumo;
-client.shoukaku = shoukaku;
-
-client.on('raw', (d) => shoukaku.connector.updateVoiceState(d));
+client.lavalink = lavalink;
 
 // Health check server - Railway asigna el puerto automáticamente
 const PORT = process.env.PORT || 8080;
