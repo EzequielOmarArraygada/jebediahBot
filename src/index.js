@@ -5,7 +5,6 @@ const fs = require('fs');
 const path = require('path');
 const { manager, setClient } = require('./erela');
 const http = require('http');
-const PORT = process.env.PORT || 3000;
 
 // Log de versiones para debugging
 console.log('[DEBUG] Versiones de dependencias:');
@@ -76,9 +75,42 @@ client.once('ready', () => {
 // Login del bot
 client.login(process.env.DISCORD_TOKEN);
 
+// Health check server - Railway asigna el puerto automáticamente
+const PORT = process.env.PORT || 8080;
 http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('OK');
+  // Log de la petición para debugging
+  console.log(`[HEALTH] Petición recibida: ${req.method} ${req.url}`);
+  
+  // Headers CORS para evitar problemas
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+  
+  // Respuesta del health check
+  const healthData = {
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    lavalink: {
+      connected: client.manager.nodes.size > 0,
+      nodes: Array.from(client.manager.nodes.values()).map(node => ({
+        host: node.options.host,
+        port: node.options.port,
+        connected: node.connected
+      }))
+    }
+  };
+  
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(healthData, null, 2));
 }).listen(PORT, () => {
   console.log(`Healthcheck server running on port ${PORT}`);
+  console.log(`[HEALTH] Endpoint disponible en: http://localhost:${PORT}/`);
 }); 
