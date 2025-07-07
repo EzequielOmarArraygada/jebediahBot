@@ -6,10 +6,9 @@ const path = require('path');
 const { manager, setClient } = require('./erela');
 const http = require('http');
 
-// Log de versiones para debugging
+// Log de versiones para debugging (solo erela.js)
 console.log('[DEBUG] Versiones de dependencias:');
 console.log(`[DEBUG] erela.js: ${require('erela.js/package.json').version}`);
-console.log(`[DEBUG] discord.js: ${require('discord.js/package.json').version}`);
 console.log(`[DEBUG] Node.js: ${process.version}`);
 
 // Configuración del cliente
