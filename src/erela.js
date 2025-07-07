@@ -22,10 +22,16 @@ class SimpleLavalink {
     const url = `ws://${process.env.LAVALINK_HOST}:${process.env.LAVALINK_PORT}`;
     console.log(`[Lavalink] Conectando a: ${url}`);
     
+    // Usar el User-Id del bot si está disponible
+    const userId = client && client.user ? client.user.id : '123456789';
+    console.log(`[Lavalink] Usando User-Id: ${userId}`);
+    
     this.ws = new WebSocket(url, {
       headers: {
         'Authorization': process.env.LAVALINK_PASSWORD,
-        'User-Agent': 'JebediahBot/1.0.0'
+        'User-Id': userId,
+        'User-Agent': 'JebediahBot/1.0.0',
+        'Session-Id': 'jebediah-session'
       }
     });
 
@@ -120,7 +126,10 @@ function setClient(discordClient) {
   client = discordClient;
   // Conectar a Lavalink cuando el bot esté listo
   client.once('ready', () => {
-    lavalink.connect();
+    // Esperar un poco para asegurar que el bot esté completamente listo
+    setTimeout(() => {
+      lavalink.connect();
+    }, 1000);
   });
 }
 
