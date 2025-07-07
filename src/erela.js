@@ -30,6 +30,18 @@ const manager = new Manager({
 manager.on('nodeConnect', node => {
   console.log(`[Lavalink] Nodo conectado: ${node.options.host}:${node.options.port}`);
   console.log(`[DEBUG] Versión de erela.js: ${require('erela.js/package.json').version}`);
+  
+  // Log del WebSocket para debugging
+  if (node.ws) {
+    node.ws.on('message', (data) => {
+      try {
+        const message = JSON.parse(data);
+        console.log(`[DEBUG] Mensaje recibido de Lavalink:`, message);
+      } catch (e) {
+        console.log(`[DEBUG] Mensaje no-JSON recibido:`, data.toString());
+      }
+    });
+  }
 });
 
 manager.on('nodeError', (node, error) => {
