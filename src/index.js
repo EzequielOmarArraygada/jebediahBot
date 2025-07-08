@@ -1,6 +1,8 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const { Player } = require('discord-player');
+const { useMainPlayer } = require('discord-player');
+const { YouTubeExtractor } = require('@discord-player/extractor');
 
 const client = new Client({
     intents: [
@@ -14,6 +16,9 @@ const client = new Client({
 client.commands = new Collection();
 const player = new Player(client);
 client.player = player;
+
+useMainPlayer();
+player.extractors.register(YouTubeExtractor);
 
 // Cargar comandos
 const fs = require('fs');
