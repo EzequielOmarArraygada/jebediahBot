@@ -55,6 +55,6 @@ const PORT = process.env.PORT; // Sin valor por defecto
 http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('OK');
-}).listen(PORT, () => {
+}).listen(PORT, '0.0.0.0', () => {
   console.log(`Healthcheck server running on port ${PORT}`);
 }); 
