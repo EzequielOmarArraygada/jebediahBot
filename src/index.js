@@ -1,8 +1,6 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const { Player } = require('discord-player');
-const { useMainPlayer, useExtractor } = require('discord-player');
-const { YouTubeExtractor } = require('@discord-player/extractor');
 
 const client = new Client({
     intents: [
@@ -17,8 +15,8 @@ client.commands = new Collection();
 const player = new Player(client);
 client.player = player;
 
-useMainPlayer();
-useExtractor(YouTubeExtractor);
+// Registrar extractores por defecto (incluye YouTube)
+Player.extractors.loadDefault();
 
 // Cargar comandos
 const fs = require('fs');
