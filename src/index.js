@@ -53,6 +53,7 @@ const http = require('http');
 const PORT = process.env.PORT; // Sin valor por defecto
 
 http.createServer((req, res) => {
+  console.log(`[HEALTHCHECK] ${req.method} ${req.url} desde ${req.socket.remoteAddress}`);
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('OK');
 }).listen(PORT, '0.0.0.0', () => {
