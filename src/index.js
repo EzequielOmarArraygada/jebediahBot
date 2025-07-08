@@ -20,8 +20,8 @@ async function main() {
     const player = new Player(client);
     client.player = player;
 
-    // Registrar extractores por defecto (incluye YouTube)
-    // await Extractors.loadDefault(); // Eliminada: ya no es necesaria y causa error
+    // Registrar extractores por defecto (incluye YouTube, Spotify, etc.)
+    await player.extractors.loadDefault();
 
     // Cargar comandos
     const commandsPath = path.join(__dirname, 'commands');
