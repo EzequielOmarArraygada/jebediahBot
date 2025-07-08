@@ -41,4 +41,15 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-client.login(process.env.TOKEN); 
+client.login(process.env.TOKEN);
+
+// Servidor HTTP mínimo para health check (Railway)
+const http = require('http');
+const PORT = process.env.PORT || 3000;
+
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('OK');
+}).listen(PORT, () => {
+  console.log(`Healthcheck server running on port ${PORT}`);
+}); 
