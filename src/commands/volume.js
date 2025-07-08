@@ -3,37 +3,22 @@ const { SlashCommandBuilder } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('volume')
-        .setDescription('Controla el volumen de la música')
+        .setDescription('Ajusta el volumen de la música')
         .addIntegerOption(option =>
-            option.setName('level')
-                .setDescription('Nivel de volumen (0-100)')
-                .setRequired(true)
-                .setMinValue(0)
-                .setMaxValue(100)),
-
-    async execute(interaction) {
-        const volume = interaction.options.getInteger('level');
-        const guild = interaction.guild;
-        const player = interaction.client.manager.players.get(guild.id);
-
-        if (!player || !player.queue.current) {
-            return interaction.reply({
-                content: '❌ No hay música reproduciéndose actualmente!',
-                ephemeral: true
-            });
+            option.setName('valor')
+                .setDescription('Volumen (0-100)')
+                .setRequired(true)),
+    async execute(interaction, client) {
+        const valor = interaction.options.getInteger('valor');
+        if (valor < 0 || valor > 100) {
+            return interaction.reply('El volumen debe estar entre 0 y 100.');
         }
-
-        if (!interaction.member.voice.channel) {
-            return interaction.reply({
-                content: '❌ Debes estar en un canal de voz para usar este comando!',
-                ephemeral: true
-            });
+        const player = client.player;
+        const queue = player.nodes.get(interaction.guild.id);
+        if (!queue || !queue.isPlaying()) {
+            return interaction.reply('No hay música reproduciéndose.');
         }
-
-        player.setVolume(volume);
-
-        return interaction.reply({
-            content: `🔊 Volumen ajustado a **${volume}%**`
-        });
-    },
+        queue.node.setVolume(valor);
+        return interaction.reply(`🔊 Volumen ajustado a ${valor}%`);
+    }
 }; 

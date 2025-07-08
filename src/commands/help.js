@@ -1,60 +1,17 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('help')
-        .setDescription('Muestra información sobre los comandos disponibles'),
-
+        .setDescription('Muestra los comandos disponibles'),
     async execute(interaction) {
-        const embed = new EmbedBuilder()
-            .setColor('#9b59b6')
-            .setTitle('🎵 Jebediah Bot - Comandos de Música (Lavalink)')
-            .setDescription('Aquí tienes todos los comandos disponibles para controlar la música:')
-            .addFields(
-                {
-                    name: '🎵 /play',
-                    value: 'Reproduce música usando Lavalink\nUso: `/play query: [URL o nombre de la canción]`',
-                    inline: false
-                },
-                {
-                    name: '⏭️ /skip',
-                    value: 'Salta la canción actual',
-                    inline: false
-                },
-                {
-                    name: '⏹️ /stop',
-                    value: 'Detiene la reproducción y limpia la cola',
-                    inline: false
-                },
-                {
-                    name: '📋 /queue',
-                    value: 'Muestra la cola de reproducción actual',
-                    inline: false
-                },
-                {
-                    name: '🔊 /volume',
-                    value: 'Controla el volumen de la música\nUso: `/volume level: [0-100]`',
-                    inline: false
-                },
-                {
-                    name: '🔁 /loop',
-                    value: 'Activa o desactiva la reproducción en bucle de la canción actual',
-                    inline: false
-                },
-                {
-                    name: '❓ /help',
-                    value: 'Muestra esta información de ayuda',
-                    inline: false
-                }
-            )
-            .addFields({
-                name: '💡 Consejos',
-                value: '• Usa URLs de YouTube, SoundCloud, etc.\n• Debes estar en un canal de voz para usar los comandos\n• El bot soporta colas de hasta 50 canciones\n• El volumen por defecto es 50%\n• Ahora usando Lavalink para máxima estabilidad',
-                inline: false
-            })
-            .setFooter({ text: 'Jebediah Bot - Tu DJ personal de Discord' })
-            .setTimestamp();
-
-        await interaction.reply({ embeds: [embed] });
-    },
+        const ayuda = `**Comandos disponibles:**\n\n` +
+            `/play <canción o URL> — Reproduce una canción\n` +
+            `/skip — Salta la canción actual\n` +
+            `/stop — Detiene la música y sale del canal\n` +
+            `/queue — Muestra la cola de canciones\n` +
+            `/volume <0-100> — Ajusta el volumen\n` +
+            `/help — Muestra este mensaje`;
+        return interaction.reply(ayuda);
+    }
 }; 
