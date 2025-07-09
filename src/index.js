@@ -21,7 +21,9 @@ async function main() {
         ytdlOptions: {
             quality: 'highestaudio',
             highWaterMark: 1 << 25
-        }
+        },
+        connectionTimeout: 999999,
+        bufferingTimeout: 999999
     });
     client.player = player;
 
@@ -33,10 +35,15 @@ async function main() {
     // Agregar listeners para eventos del Player
     player.events.on('playerStart', (queue, track) => {
         console.log(`[PLAYER] Iniciando reproducción: ${track.title}`);
+        console.log(`[PLAYER] Track URL: ${track.url}`);
+        console.log(`[PLAYER] Duración: ${track.duration}`);
+        console.log(`[PLAYER] Queue size: ${queue.tracks.size}`);
     });
 
     player.events.on('playerError', (queue, error) => {
         console.error(`[PLAYER] Error en reproducción:`, error);
+        console.error(`[PLAYER] Error stack:`, error.stack);
+        console.error(`[PLAYER] Error code:`, error.code);
     });
 
     player.events.on('playerSkip', (queue, track) => {
@@ -45,14 +52,26 @@ async function main() {
 
     player.events.on('playerFinish', (queue, track) => {
         console.log(`[PLAYER] Canción terminada: ${track.title}`);
+        console.log(`[PLAYER] Tracks restantes en cola: ${queue.tracks.size}`);
     });
 
     player.events.on('connectionCreate', (queue) => {
         console.log(`[PLAYER] Conexión de voz creada en: ${queue.channel.name}`);
+        console.log(`[PLAYER] Channel ID: ${queue.channel.id}`);
+        console.log(`[PLAYER] Guild ID: ${queue.guild.id}`);
     });
 
     player.events.on('connectionDestroy', (queue) => {
         console.log(`[PLAYER] Conexión de voz destruida en: ${queue.channel.name}`);
+        console.log(`[PLAYER] Channel ID: ${queue.channel.id}`);
+    });
+
+    player.events.on('debug', (message) => {
+        console.log(`[PLAYER DEBUG] ${message}`);
+    });
+
+    player.events.on('error', (error) => {
+        console.error(`[PLAYER ERROR] Error general:`, error);
     });
 
     // Cargar comandos

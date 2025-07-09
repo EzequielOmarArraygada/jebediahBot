@@ -32,15 +32,25 @@ module.exports = {
             console.log(`[PLAY] deferReply completado`);
             
             console.log(`[PLAY] Intentando reproducir: "${query}" en canal ${channel.name}`);
+            console.log(`[PLAY] Channel ID: ${channel.id}`);
+            console.log(`[PLAY] Guild ID: ${interaction.guild.id}`);
+            
             const res = await player.play(channel, query, {
                 nodeOptions: {
-                    metadata: interaction
+                    metadata: interaction,
+                    leaveOnEmpty: false,
+                    leaveOnEnd: false,
+                    leaveOnStop: false
                 }
             });
             
             console.log(`[PLAY] Reproducción exitosa: ${res.track.title}`);
             console.log(`[PLAY] Track URL: ${res.track.url}`);
             console.log(`[PLAY] Duración: ${res.track.duration}`);
+            console.log(`[PLAY] Queue creada: ${res.queue ? 'Sí' : 'No'}`);
+            if (res.queue) {
+                console.log(`[PLAY] Queue tracks: ${res.queue.tracks.size}`);
+            }
             
             return interaction.followUp(`🎶 Reproduciendo: **${res.track.title}**`);
         } catch (e) {
