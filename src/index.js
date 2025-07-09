@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const { Player } = require('discord-player');
-const { Extractors } = require('@discord-player/extractor');
+const { DefaultExtractors } = require('@discord-player/extractor');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
@@ -17,13 +17,18 @@ async function main() {
     });
 
     client.commands = new Collection();
-    const player = new Player(client);
+    const player = new Player(client, {
+        ytdlOptions: {
+            quality: 'highestaudio',
+            highWaterMark: 1 << 25
+        }
+    });
     client.player = player;
 
-    console.log('[INIT] Player creado, registrando extractor de YouTube...');
-    // Registrar solo el extractor de YouTube
-    await player.extractors.loadMulti(['YouTube']);
-    console.log('[INIT] Extractor de YouTube registrado exitosamente');
+    console.log('[INIT] Player creado, registrando extractores...');
+    // Registrar extractores por defecto (YouTube será el preferido)
+    await player.extractors.loadMulti(DefaultExtractors);
+    console.log('[INIT] Extractores registrados exitosamente');
 
     // Cargar comandos
     const commandsPath = path.join(__dirname, 'commands');
