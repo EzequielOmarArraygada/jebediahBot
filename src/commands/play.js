@@ -34,8 +34,21 @@ module.exports = {
             console.log(`[PLAY] Intentando reproducir: "${query}" en canal ${channel.name}`);
             console.log(`[PLAY] Channel ID: ${channel.id}`);
             console.log(`[PLAY] Guild ID: ${interaction.guild.id}`);
+
+            // Buscar tracks manualmente y filtrar solo YouTube
+            const results = await player.search(query, {
+                requestedBy: interaction.user,
+                searchEngine: 'auto'
+            });
+            console.log(`[PLAY] Resultados encontrados: ${results.tracks.length}`);
+            const ytTrack = results.tracks.find(track => track.url && track.url.includes('youtube.com'));
+            if (!ytTrack) {
+                console.log('[PLAY] No se encontró ningún resultado de YouTube.');
+                return interaction.followUp('No se encontró ninguna canción de YouTube para tu búsqueda.');
+            }
+            console.log(`[PLAY] Track de YouTube seleccionado: ${ytTrack.title} (${ytTrack.url})`);
             
-            const res = await player.play(channel, query, {
+            const res = await player.play(channel, ytTrack.url, {
                 nodeOptions: {
                     metadata: interaction,
                     leaveOnEmpty: false,
