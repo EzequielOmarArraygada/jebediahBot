@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const { Player } = require('discord-player');
-const { DefaultExtractors } = require('@discord-player/extractor');
+const { YouTubeExtractor } = require('@discord-player/extractor');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
@@ -27,10 +27,10 @@ async function main() {
     });
     client.player = player;
 
-    console.log('[INIT] Player creado, registrando extractores...');
-    // Registrar extractores por defecto (YouTube será el preferido)
-    await player.extractors.loadMulti(DefaultExtractors);
-    console.log('[INIT] Extractores registrados exitosamente');
+    console.log('[INIT] Player creado, registrando solo extractor de YouTube...');
+    // Registrar solo el extractor de YouTube
+    await player.extractors.loadMulti([YouTubeExtractor]);
+    console.log('[INIT] Solo extractor de YouTube registrado exitosamente');
 
     // Agregar listeners para eventos del Player
     player.events.on('playerStart', (queue, track) => {
@@ -67,7 +67,7 @@ async function main() {
     });
 
     player.events.on('debug', (message) => {
-        console.log(`[PLAYER DEBUG] ${message}`);
+        console.dir(message, { depth: null });
     });
 
     player.events.on('error', (error) => {
