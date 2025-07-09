@@ -29,7 +29,7 @@ async function main() {
 
     console.log('[INIT] Player creado, registrando solo extractor de YouTube...');
     // Registrar solo el extractor de YouTube
-    await player.extractors.loadMulti([YouTubeExtractor]);
+    await player.extractors.loadMulti(['YouTube']);
     console.log('[INIT] Solo extractor de YouTube registrado exitosamente');
 
     // Agregar listeners para eventos del Player
