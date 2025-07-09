@@ -30,6 +30,31 @@ async function main() {
     await player.extractors.loadMulti(DefaultExtractors);
     console.log('[INIT] Extractores registrados exitosamente');
 
+    // Agregar listeners para eventos del Player
+    player.events.on('playerStart', (queue, track) => {
+        console.log(`[PLAYER] Iniciando reproducción: ${track.title}`);
+    });
+
+    player.events.on('playerError', (queue, error) => {
+        console.error(`[PLAYER] Error en reproducción:`, error);
+    });
+
+    player.events.on('playerSkip', (queue, track) => {
+        console.log(`[PLAYER] Canción saltada: ${track.title}`);
+    });
+
+    player.events.on('playerFinish', (queue, track) => {
+        console.log(`[PLAYER] Canción terminada: ${track.title}`);
+    });
+
+    player.events.on('connectionCreate', (queue) => {
+        console.log(`[PLAYER] Conexión de voz creada en: ${queue.channel.name}`);
+    });
+
+    player.events.on('connectionDestroy', (queue) => {
+        console.log(`[PLAYER] Conexión de voz destruida en: ${queue.channel.name}`);
+    });
+
     // Cargar comandos
     const commandsPath = path.join(__dirname, 'commands');
     const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
