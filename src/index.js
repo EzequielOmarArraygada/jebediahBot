@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const { Player } = require('discord-player');
-const { YouTubeExtractor } = require('@discord-player/extractor');
+const { Extractors } = require('@discord-player/extractor');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
@@ -22,7 +22,7 @@ async function main() {
 
     console.log('[INIT] Player creado, registrando extractor de YouTube...');
     // Registrar solo el extractor de YouTube
-    await player.extractors.register(YouTubeExtractor, {});
+    await player.extractors.loadMulti([Extractors.YouTube]);
     console.log('[INIT] Extractor de YouTube registrado exitosamente');
 
     // Cargar comandos
