@@ -6,7 +6,7 @@ module.exports = {
         .setDescription('Reproduce una canción de YouTube')
         .addStringOption(option =>
             option.setName('query')
-                .setDescription('Nombre o URL de la canción')
+                .setDescription('Nombre o URL de la canción de YouTube')
                 .setRequired(true)),
     async execute(interaction, client) {
         console.log(`[PLAY] Comando ejecutado por ${interaction.user.tag} con query: "${interaction.options.getString('query')}"`);
