@@ -20,8 +20,10 @@ async function main() {
     const player = new Player(client);
     client.player = player;
 
+    console.log('[INIT] Player creado, registrando extractores...');
     // Registrar extractores por defecto (incluye YouTube, Spotify, etc.)
     await player.extractors.loadMulti(DefaultExtractors);
+    console.log('[INIT] Extractores registrados exitosamente');
 
     // Cargar comandos
     const commandsPath = path.join(__dirname, 'commands');
