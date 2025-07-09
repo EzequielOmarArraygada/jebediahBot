@@ -25,6 +25,15 @@ async function main() {
         connectionTimeout: 999999,
         bufferingTimeout: 999999
     });
+    
+    // Configurar cookie de YouTube si está disponible
+    if (process.env.YOUTUBE_COOKIE) {
+        console.log('[INIT] Cookie de YouTube configurada');
+        player.options.youtubeCookie = process.env.YOUTUBE_COOKIE;
+    } else {
+        console.log('[INIT] No se encontró cookie de YouTube');
+    }
+    
     client.player = player;
 
     console.log('[INIT] Player creado, registrando extractores por defecto...');
