@@ -22,7 +22,7 @@ async function main() {
 
     console.log('[INIT] Player creado, registrando extractor de YouTube...');
     // Registrar solo el extractor de YouTube
-    await player.extractors.loadMulti([Extractors.YouTube]);
+    await player.extractors.loadMulti(['YouTube']);
     console.log('[INIT] Extractor de YouTube registrado exitosamente');
 
     // Cargar comandos
