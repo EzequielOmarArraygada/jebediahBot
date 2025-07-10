@@ -1,0 +1,3 @@
+@echo off
+echo Iniciando Jebediah Bot con logs...
+powershell -ExecutionPolicy Bypass -File "%~dp0start-bot-with-logs.ps1" 

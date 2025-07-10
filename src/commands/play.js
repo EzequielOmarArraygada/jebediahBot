@@ -11,16 +11,48 @@ module.exports = {
                 .setDescription('URL de YouTube o término de búsqueda')
                 .setRequired(true)),
 
-    async execute(interaction) {
-        await interaction.deferReply();
-
-        const voiceChannel = interaction.member.voice.channel;
-        if (!voiceChannel) {
-            return interaction.editReply('❌ **Debes estar en un canal de voz para usar este comando.**');
+    async execute(interaction, voiceManager, voiceArgs = null) {
+        // Determinar si es un comando de voz o texto
+        const isVoiceCommand = voiceArgs !== null;
+        
+        if (!isVoiceCommand) {
+            await interaction.deferReply();
         }
 
-        const query = interaction.options.getString('url_o_busqueda');
-        const guildId = interaction.guild.id;
+        // Obtener el canal de voz del usuario
+        let voiceChannel;
+        if (isVoiceCommand) {
+            // Para comandos de voz, necesitamos obtener el canal de voz del usuario
+            const guild = interaction.client.guilds.cache.get(interaction.guildId);
+            const member = await guild.members.fetch(interaction.userId);
+            voiceChannel = member.voice.channel;
+        } else {
+            voiceChannel = interaction.member.voice.channel;
+        }
+
+        if (!voiceChannel) {
+            const message = '❌ **Debes estar en un canal de voz para usar este comando.**';
+            if (isVoiceCommand) {
+                console.log(`🎤 ${message}`);
+                return;
+            } else {
+                return interaction.editReply(message);
+            }
+        }
+
+        // Obtener la consulta (query)
+        const query = isVoiceCommand ? voiceArgs[0] : interaction.options.getString('url_o_busqueda');
+        const guildId = interaction.guildId || interaction.guild.id;
+
+        if (!query || query.trim() === '') {
+            const message = '❌ **Debes especificar una canción para reproducir.**';
+            if (isVoiceCommand) {
+                console.log(`🎤 ${message}`);
+                return;
+            } else {
+                return interaction.editReply(message);
+            }
+        }
 
         try {
             let song;
@@ -34,13 +66,19 @@ module.exports = {
                     duration: parseInt(info.video_details.durationInSec),
                     url: query,
                     thumbnail: info.video_details.thumbnails?.[0]?.url,
-                    requestedBy: interaction.user
+                    requestedBy: isVoiceCommand ? { id: interaction.userId, toString: () => `<@${interaction.userId}>` } : interaction.user
                 };
             } else {
                 // Si es búsqueda por texto
                 const searchResults = await play.search(query, { limit: 1 });
                 if (searchResults.length === 0) {
-                    return interaction.editReply('❌ **No se encontraron resultados para tu búsqueda.**');
+                    const message = '❌ **No se encontraron resultados para tu búsqueda.**';
+                    if (isVoiceCommand) {
+                        console.log(`🎤 ${message}`);
+                        return;
+                    } else {
+                        return interaction.editReply(message);
+                    }
                 }
                 const firstVideo = searchResults[0];
                 song = {
@@ -48,7 +86,7 @@ module.exports = {
                     duration: firstVideo.durationInSec || 0,
                     url: firstVideo.url,
                     thumbnail: firstVideo.thumbnails?.[0]?.url,
-                    requestedBy: interaction.user
+                    requestedBy: isVoiceCommand ? { id: interaction.userId, toString: () => `<@${interaction.userId}>` } : interaction.user
                 };
             }
 
@@ -58,7 +96,7 @@ module.exports = {
             }
 
             // Agregar a la cola
-            const position = await musicManager.addToQueue(guildId, song, interaction.user);
+            const position = await musicManager.addToQueue(guildId, song, song.requestedBy);
 
             const embed = new EmbedBuilder()
                 .setColor('#00ff00')
@@ -66,7 +104,7 @@ module.exports = {
                 .setDescription(`**${song.title}**`)
                 .addFields(
                     { name: '⏱️ Duración', value: formatDuration(song.duration), inline: true },
-                    { name: '👤 Solicitado por', value: interaction.user.toString(), inline: true },
+                    { name: '👤 Solicitado por', value: song.requestedBy.toString(), inline: true },
                     { name: '📋 Posición en cola', value: position.toString(), inline: true }
                 )
                 .setThumbnail(song.thumbnail)
@@ -76,12 +114,26 @@ module.exports = {
                 embed.setDescription(`🎵 **Reproduciendo ahora:** ${song.title}`);
             }
 
-            await interaction.editReply({ embeds: [embed] });
+            const response = { embeds: [embed] };
+
+            if (isVoiceCommand) {
+                console.log(`🎤 Comando de voz ejecutado: Reproduciendo "${song.title}"`);
+                // Para comandos de voz, podríamos enviar un mensaje al canal de texto
+                // o usar una notificación de voz
+            } else {
+                await interaction.editReply(response);
+            }
 
         } catch (error) {
             console.error('❌ Error en comando play:', error);
             console.error('🔍 Stack trace:', error.stack);
-            await interaction.editReply('❌ **Error al reproducir la música. Verifica que la URL sea válida o intenta con otra búsqueda.**');
+            const errorMessage = '❌ **Error al reproducir la música. Verifica que la URL sea válida o intenta con otra búsqueda.**';
+            
+            if (isVoiceCommand) {
+                console.log(`🎤 ${errorMessage}`);
+            } else {
+                await interaction.editReply(errorMessage);
+            }
         }
     },
 };

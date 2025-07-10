@@ -65,4 +65,10 @@ jspm_packages/
 
 # OS
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Google Cloud credentials
+google-credentials.json
+*.json
+!package.json
+!package-lock.json 

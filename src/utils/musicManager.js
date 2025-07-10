@@ -17,6 +17,7 @@ class MusicManager {
         this.queues = new Map(); // Map<GuildId, Queue>
         this.connections = new Map(); // Map<GuildId, VoiceConnection>
         this.players = new Map(); // Map<GuildId, AudioPlayer>
+        this.connectionMessages = new Map(); // Map<GuildId, Message> - Para guardar el mensaje de conexión
     }
 
     // Estructura de la cola
@@ -253,6 +254,25 @@ class MusicManager {
         this.queues.delete(guildId);
         this.connections.delete(guildId);
         this.players.delete(guildId);
+    }
+
+    // Guardar referencia del mensaje de conexión
+    setConnectionMessage(guildId, message) {
+        this.connectionMessages.set(guildId, message);
+    }
+
+    // Obtener y borrar el mensaje de conexión
+    async deleteConnectionMessage(guildId) {
+        const message = this.connectionMessages.get(guildId);
+        if (message) {
+            try {
+                await message.delete();
+                console.log(`🗑️ Mensaje de conexión borrado para guild: ${guildId}`);
+            } catch (error) {
+                console.error(`❌ Error borrando mensaje de conexión: ${error.message}`);
+            }
+            this.connectionMessages.delete(guildId);
+        }
     }
 }
 
