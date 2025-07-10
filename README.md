@@ -103,7 +103,73 @@ jebediahBot/
 └── README.md
 ```
 
-## 🚀 Despliegue en Railway
+## 🚀 Despliegue
+
+### Despliegue Local (Recomendado para desarrollo)
+
+El bot está configurado para ejecutarse localmente con PM2 para máxima estabilidad.
+
+#### Inicio rápido:
+```bash
+# Iniciar con PM2
+npm run pm2:start
+
+# Ver estado
+pm2 status
+
+# Ver logs en tiempo real
+pm2 logs jebediah-bot
+
+# Monitorear recursos
+pm2 monit
+```
+
+#### Inicio automático con Windows:
+```bash
+# Configurar inicio automático (requiere permisos de administrador)
+.\setup-autostart-admin.bat
+
+# Desactivar inicio automático
+.\disable-autostart.ps1
+```
+
+#### Comandos útiles para gestión:
+```bash
+# Ver estado del bot
+pm2 status
+
+# Ver logs en tiempo real
+pm2 logs jebediah-bot
+
+# Monitorear recursos (CPU, memoria, etc.)
+pm2 monit
+
+# Reiniciar el bot
+pm2 restart jebediah-bot
+
+# Detener el bot
+pm2 stop jebediah-bot
+
+# Eliminar proceso PM2
+pm2 delete jebediah-bot
+
+# Guardar configuración actual
+pm2 save
+
+# Restaurar procesos guardados
+pm2 resurrect
+```
+
+#### Verificar tarea programada:
+```bash
+# Ver estado de la tarea de inicio automático
+Get-ScheduledTask -TaskName "JebediahBot"
+
+# Ver detalles de la tarea
+Get-ScheduledTask -TaskName "JebediahBot" | Get-ScheduledTaskInfo
+```
+
+### Despliegue en Railway (Producción)
 
 1. Conecta tu repositorio a Railway
 2. Configura las variables de entorno:
