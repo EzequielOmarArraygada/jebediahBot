@@ -6,7 +6,17 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "deploy": "node src/deploy-commands.js"
+    "deploy": "node src/deploy-commands.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop jebediah-bot",
+    "pm2:restart": "pm2 restart jebediah-bot",
+    "pm2:logs": "pm2 logs jebediah-bot",
+    "pm2:monit": "pm2 monit",
+    "start:background": "powershell -ExecutionPolicy Bypass -File start-bot-background.ps1",
+    "start:with-logs": "powershell -ExecutionPolicy Bypass -File start-bot-with-logs.ps1",
+    "stop:background": "powershell -Command \"Stop-Process -Name 'node' -Force\"",
+    "logs:background": "powershell -Command \"Get-Process | Where-Object {$_.ProcessName -eq 'node'}\"",
+    "logs:tail": "powershell -Command \"Get-Content logs\\bot_*.log -Tail 50\""
   },
   "keywords": [
     "discord",
@@ -18,15 +28,19 @@
   "license": "MIT",
   "dependencies": {
     "@discordjs/voice": "^0.16.1",
+    "@google-cloud/speech": "^6.0.0",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
     "ffmpeg-static": "^5.2.0",
     "libsodium-wrappers": "^0.7.13",
     "opusscript": "^0.0.8",
-    "play-dl": "^1.9.7"
+    "play-dl": "^1.9.7",
+    "prism-media": "^1.3.5",
+    "wav": "^1.0.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "pm2": "^6.0.8"
   },
   "engines": {
     "node": ">=16.0.0"
