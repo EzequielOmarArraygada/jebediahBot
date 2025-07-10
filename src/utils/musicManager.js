@@ -180,6 +180,7 @@ class MusicManager {
             let retryWithoutCookies = false;
             let errorBuffer = '';
             let dataReceived = false;
+            let totalDataReceived = 0;
             let startTime = Date.now();
             
             console.log('⏱️ Iniciando proceso yt-dlp a las:', new Date().toISOString());
@@ -201,94 +202,7 @@ class MusicManager {
                 }
             });
             
-            // Manejar el cierre del proceso y decidir si reintentar
-            ytdlp.on('close', (code) => {
-                console.log('🔴 yt-dlp proceso cerrado con código:', code);
-                console.log('📊 Estado final del proceso:', {
-                    exitCode: code,
-                    dataReceived: dataReceived,
-                    totalDataReceived: totalDataReceived,
-                    timeElapsed: Date.now() - startTime
-                });
-                
-                if (timeout) {
-                    clearTimeout(timeout);
-                    console.log('⏰ Timeout limpiado');
-                }
-                
-                // Si el proceso terminó con error y no recibimos datos, intentar métodos alternativos
-                if (code !== 0 && !dataReceived && !retryWithoutCookies) {
-                    console.log('❌ Proceso terminó con error y sin datos recibidos');
-                    
-                    // Verificar si es error de bot detection
-                    if (errorBuffer.includes('Sign in to confirm you\'re not a bot') || errorBuffer.includes('Sign in to confirm')) {
-                        retryWithoutCookies = true;
-                        console.log('🔄 Bot detection detectado en buffer, intentando método alternativo...');
-                        console.log('🔄 Buffer de errores acumulado:', errorBuffer);
-                        
-                        // Intentar con método alternativo sin cookies
-                        const ytdlpAlternative = spawn('yt-dlp', [
-                            '-f', 'bestaudio',
-                            '-o', '-',
-                            '--no-playlist',
-                            '--no-check-certificates',
-                            '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                            '--extractor-args', 'youtube:player_client=web',
-                            '--no-cache-dir',
-                            '--no-cookies',
-                            song.url
-                        ], { stdio: ['ignore', 'pipe', 'pipe'] });
-                        
-                        console.log('🔄 Iniciando proceso alternativo sin cookies...');
-                        this.handleYtdlpProcess(ytdlpAlternative, guildId, queue, player, null);
-                    }
-                    // Verificar si es error de cookies
-                    else if (errorBuffer.includes('invalid Netscape format cookies') || errorBuffer.includes('failed to load cookies')) {
-                        retryWithoutCookies = true;
-                        console.log('🔄 Error de cookies detectado en buffer, reintentando sin cookies...');
-                        
-                        // Intentar sin cookies
-                        const ytdlpNoCookies = spawn('yt-dlp', [
-                            '-f', '140/251/250/249',
-                            '-o', '-',
-                            '--no-playlist',
-                            '--no-check-certificates',
-                            '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                            '--extractor-args', 'youtube:player_client=web',
-                            '--no-cache-dir',
-                            '--verbose',
-                            song.url
-                        ], { stdio: ['ignore', 'pipe', 'pipe'] });
-                        
-                        console.log('🔄 Iniciando proceso sin cookies...');
-                        this.handleYtdlpProcess(ytdlpNoCookies, guildId, queue, player, null);
-                    }
-                    // Verificar si es error de formato
-                    else if (errorBuffer.includes('Requested format is not available') || errorBuffer.includes('No video formats found')) {
-                        retryWithoutCookies = true;
-                        console.log('🔄 Error de formato detectado en buffer, reintentando con formato básico...');
-                        
-                        // Intentar con formato más básico
-                        const ytdlpBasic = spawn('yt-dlp', [
-                            '-f', 'worstaudio',
-                            '-o', '-',
-                            '--no-playlist',
-                            '--no-check-certificates',
-                            '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                            '--extractor-args', 'youtube:player_client=web',
-                            '--no-cache-dir',
-                            song.url
-                        ], { stdio: ['ignore', 'pipe', 'pipe'] });
-                        
-                        console.log('🔄 Iniciando proceso con formato básico...');
-                        this.handleYtdlpProcess(ytdlpBasic, guildId, queue, player, null);
-                    }
-                    else {
-                        console.log('❌ Error desconocido, pasando a la siguiente canción');
-                        this.playNext(guildId);
-                    }
-                }
-            });
+
 
             // Agregar timeout para evitar que se quede colgado
             const timeout = setTimeout(() => {
@@ -302,7 +216,8 @@ class MusicManager {
                 this.playNext(guildId);
             }, 30000); // 30 segundos
 
-            this.handleYtdlpProcess(ytdlp, guildId, queue, player, timeout);
+            // Manejar el proceso directamente aquí en lugar de usar handleYtdlpProcess
+            this.handleYtdlpProcessDirect(ytdlp, guildId, queue, player, timeout, errorBuffer, retryWithoutCookies, dataReceived, totalDataReceived, startTime, song);
 
         } catch (error) {
             console.error('Error al reproducir (yt-dlp):', error);
@@ -408,7 +323,164 @@ class MusicManager {
         this.players.delete(guildId);
     }
 
-    // Método para manejar el proceso de yt-dlp
+    // Método para manejar el proceso de yt-dlp directamente
+    handleYtdlpProcessDirect(ytdlp, guildId, queue, player, timeout, errorBuffer, retryWithoutCookies, dataReceived, totalDataReceived, startTime, song) {
+        console.log('🎯 Iniciando handleYtdlpProcessDirect...');
+        
+        ytdlp.stdout.on('data', (chunk) => {
+            if (!dataReceived) {
+                dataReceived = true;
+                console.log('🟢 ¡PRIMER DATO RECIBIDO! yt-dlp está enviando datos de audio');
+                console.log('⏱️ Tiempo transcurrido desde inicio:', Date.now() - startTime, 'ms');
+            }
+            totalDataReceived += chunk.length;
+            console.log('🟢 yt-dlp enviando datos de audio:', chunk.length, 'bytes (total:', totalDataReceived, 'bytes)');
+        });
+        
+        ytdlp.stdout.on('end', () => {
+            console.log('🔴 yt-dlp terminó de enviar datos (end)');
+            console.log('📊 Resumen de datos recibidos:', {
+                totalBytes: totalDataReceived,
+                timeElapsed: Date.now() - startTime,
+                dataReceived: dataReceived
+            });
+        });
+        
+        ytdlp.stderr.on('data', (chunk) => {
+            const stderr = chunk.toString();
+            errorBuffer += stderr;
+            console.log('🔴 yt-dlp stderr:', stderr);
+            
+            // Detectar patrones específicos en stderr
+            if (stderr.includes('Downloading')) {
+                console.log('📥 Detectado: Descarga en progreso');
+            }
+            if (stderr.includes('ERROR')) {
+                console.log('❌ Detectado: Error en stderr');
+            }
+            if (stderr.includes('WARNING')) {
+                console.log('⚠️ Detectado: Advertencia en stderr');
+            }
+        });
+        
+        // Manejar el cierre del proceso y decidir si reintentar
+        ytdlp.on('close', (code) => {
+            console.log('🔴 yt-dlp proceso cerrado con código:', code);
+            console.log('📊 Estado final del proceso:', {
+                exitCode: code,
+                dataReceived: dataReceived,
+                totalDataReceived: totalDataReceived,
+                timeElapsed: Date.now() - startTime
+            });
+            
+            if (timeout) {
+                clearTimeout(timeout);
+                console.log('⏰ Timeout limpiado');
+            }
+            
+            // Si el proceso terminó con error y no recibimos datos, intentar métodos alternativos
+            if (code !== 0 && !dataReceived && !retryWithoutCookies) {
+                console.log('❌ Proceso terminó con error y sin datos recibidos');
+                
+                // Verificar si es error de bot detection
+                if (errorBuffer.includes('Sign in to confirm you\'re not a bot') || errorBuffer.includes('Sign in to confirm')) {
+                    console.log('🔄 Bot detection detectado en buffer, intentando método alternativo...');
+                    console.log('🔄 Buffer de errores acumulado:', errorBuffer);
+                    
+                    // Intentar con método alternativo sin cookies
+                    const ytdlpAlternative = spawn('yt-dlp', [
+                        '-f', 'bestaudio',
+                        '-o', '-',
+                        '--no-playlist',
+                        '--no-check-certificates',
+                        '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        '--extractor-args', 'youtube:player_client=web',
+                        '--no-cache-dir',
+                        '--no-cookies',
+                        song.url
+                    ], { stdio: ['ignore', 'pipe', 'pipe'] });
+                    
+                    console.log('🔄 Iniciando proceso alternativo sin cookies...');
+                    this.handleYtdlpProcessDirect(ytdlpAlternative, guildId, queue, player, null, '', true, false, 0, Date.now(), song);
+                }
+                // Verificar si es error de cookies
+                else if (errorBuffer.includes('invalid Netscape format cookies') || errorBuffer.includes('failed to load cookies')) {
+                    console.log('🔄 Error de cookies detectado en buffer, reintentando sin cookies...');
+                    
+                    // Intentar sin cookies
+                    const ytdlpNoCookies = spawn('yt-dlp', [
+                        '-f', '140/251/250/249',
+                        '-o', '-',
+                        '--no-playlist',
+                        '--no-check-certificates',
+                        '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        '--extractor-args', 'youtube:player_client=web',
+                        '--no-cache-dir',
+                        '--verbose',
+                        song.url
+                    ], { stdio: ['ignore', 'pipe', 'pipe'] });
+                    
+                    console.log('🔄 Iniciando proceso sin cookies...');
+                    this.handleYtdlpProcessDirect(ytdlpNoCookies, guildId, queue, player, null, '', true, false, 0, Date.now(), song);
+                }
+                // Verificar si es error de formato
+                else if (errorBuffer.includes('Requested format is not available') || errorBuffer.includes('No video formats found')) {
+                    console.log('🔄 Error de formato detectado en buffer, reintentando con formato básico...');
+                    
+                    // Intentar con formato más básico
+                    const ytdlpBasic = spawn('yt-dlp', [
+                        '-f', 'worstaudio',
+                        '-o', '-',
+                        '--no-playlist',
+                        '--no-check-certificates',
+                        '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        '--extractor-args', 'youtube:player_client=web',
+                        '--no-cache-dir',
+                        song.url
+                    ], { stdio: ['ignore', 'pipe', 'pipe'] });
+                    
+                    console.log('🔄 Iniciando proceso con formato básico...');
+                    this.handleYtdlpProcessDirect(ytdlpBasic, guildId, queue, player, null, '', true, false, 0, Date.now(), song);
+                }
+                else {
+                    console.log('❌ Error desconocido, pasando a la siguiente canción');
+                    this.playNext(guildId);
+                }
+            }
+        });
+
+        try {
+            console.log('🎵 Creando AudioResource...');
+            const resource = createAudioResource(ytdlp.stdout, {
+                inputType: 'arbitrary',
+                inlineVolume: true
+            });
+
+            console.log('🔊 Configurando volumen:', queue.volume / 100);
+            resource.volume.setVolume(queue.volume / 100);
+            
+            console.log('▶️ Iniciando reproducción...');
+            player.play(resource);
+            queue.playing = true;
+            console.log('✅ Reproducción iniciada correctamente');
+
+            player.once(AudioPlayerStatus.Idle, () => {
+                console.log('🛑 AudioPlayerStatus.Idle - Deteniendo yt-dlp');
+                ytdlp.kill('SIGKILL');
+            });
+            
+            player.on('error', (error) => {
+                console.error('❌ Error en AudioPlayer:', error);
+                ytdlp.kill('SIGKILL');
+            });
+            
+        } catch (error) {
+            console.error('❌ Error al crear AudioResource:', error);
+            ytdlp.kill('SIGKILL');
+        }
+    }
+
+    // Método para manejar el proceso de yt-dlp (mantener para compatibilidad)
     handleYtdlpProcess(ytdlp, guildId, queue, player, timeout = null) {
         let dataReceived = false;
         let totalDataReceived = 0;
