@@ -130,6 +130,7 @@ class MusicManager {
                 '-f', 'bestaudio[ext=webm][acodec=opus]/bestaudio',
                 '-o', '-', // salida a stdout
                 '--no-playlist',
+                '--cookies', '/app/cookies.txt', // usar cookies.txt exportado
                 song.url
             ], { stdio: ['ignore', 'pipe', 'pipe'] }); // stderr ahora es 'pipe'
 
