@@ -134,7 +134,9 @@ class MusicManager {
                 '-o', '-', // salida a stdout
                 '--no-playlist',
                 '--no-check-certificates',
-                '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                '--extractor-args', 'youtube:player_client=web',
+                '--no-cache-dir',
                 '--verbose',
                 song.url
             ];
@@ -201,7 +203,9 @@ class MusicManager {
                             '-o', '-',
                             '--no-playlist',
                             '--no-check-certificates',
-                            '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                            '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            '--extractor-args', 'youtube:player_client=web',
+                            '--no-cache-dir',
                             '--verbose',
                             song.url
                         ], { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -225,12 +229,40 @@ class MusicManager {
                             '-o', '-',
                             '--no-playlist',
                             '--no-check-certificates',
-                            '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                            '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            '--extractor-args', 'youtube:player_client=web',
+                            '--no-cache-dir',
                             song.url
                         ], { stdio: ['ignore', 'pipe', 'pipe'] });
                         
                         console.log('🔄 Iniciando proceso con formato básico...');
                         this.handleYtdlpProcess(ytdlpBasic, guildId, queue, player, timeout);
+                    }
+                }
+                
+                // Si hay error de bot detection, intentar sin cookies y con diferentes opciones
+                if (stderr.includes('Sign in to confirm you\'re not a bot')) {
+                    if (!retryWithoutCookies) {
+                        retryWithoutCookies = true;
+                        console.log('🔄 Bot detection detectado, intentando método alternativo...');
+                        console.log('🔄 Buffer de errores acumulado:', errorBuffer);
+                        ytdlp.kill('SIGKILL');
+                        
+                        // Intentar con método alternativo sin cookies
+                        const ytdlpAlternative = spawn('yt-dlp', [
+                            '-f', 'bestaudio',
+                            '-o', '-',
+                            '--no-playlist',
+                            '--no-check-certificates',
+                            '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            '--extractor-args', 'youtube:player_client=web',
+                            '--no-cache-dir',
+                            '--no-cookies',
+                            song.url
+                        ], { stdio: ['ignore', 'pipe', 'pipe'] });
+                        
+                        console.log('🔄 Iniciando proceso alternativo sin cookies...');
+                        this.handleYtdlpProcess(ytdlpAlternative, guildId, queue, player, timeout);
                     }
                 }
             });
