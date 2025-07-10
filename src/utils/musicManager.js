@@ -130,6 +130,9 @@ class MusicManager {
                 '-f', 'bestaudio[ext=webm][acodec=opus]/bestaudio',
                 '-o', '-', // salida a stdout
                 '--no-playlist',
+                '--no-check-certificates',
+                '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                '--extractor-args', 'youtube:player_client=android',
                 song.url
             ];
             
@@ -171,6 +174,9 @@ class MusicManager {
                             '-f', 'bestaudio[ext=webm][acodec=opus]/bestaudio',
                             '-o', '-',
                             '--no-playlist',
+                            '--no-check-certificates',
+                            '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                            '--extractor-args', 'youtube:player_client=android',
                             song.url
                         ], { stdio: ['ignore', 'pipe', 'pipe'] });
                         
