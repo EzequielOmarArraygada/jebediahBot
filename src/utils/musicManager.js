@@ -127,12 +127,11 @@ class MusicManager {
             console.log('🔗 URL para reproducir (yt-dlp):', song.url);
             // Lanzar yt-dlp como proceso externo para obtener el stream de audio
             const ytdlpArgs = [
-                '-f', 'bestaudio[ext=webm][acodec=opus]/bestaudio',
+                '-f', 'bestaudio/best',
                 '-o', '-', // salida a stdout
                 '--no-playlist',
                 '--no-check-certificates',
                 '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                '--extractor-args', 'youtube:player_client=android',
                 song.url
             ];
             
@@ -171,12 +170,11 @@ class MusicManager {
                         
                         // Intentar sin cookies
                         const ytdlpNoCookies = spawn('yt-dlp', [
-                            '-f', 'bestaudio[ext=webm][acodec=opus]/bestaudio',
+                            '-f', 'bestaudio/best',
                             '-o', '-',
                             '--no-playlist',
                             '--no-check-certificates',
                             '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                            '--extractor-args', 'youtube:player_client=android',
                             song.url
                         ], { stdio: ['ignore', 'pipe', 'pipe'] });
                         
@@ -310,7 +308,7 @@ class MusicManager {
         });
 
         const resource = createAudioResource(ytdlp.stdout, {
-            inputType: 'webm/opus',
+            inputType: 'arbitrary',
             inlineVolume: true
         });
 
