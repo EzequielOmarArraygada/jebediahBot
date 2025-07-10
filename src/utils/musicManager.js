@@ -144,6 +144,9 @@ class MusicManager {
             ytdlp.stdout.on('end', () => {
                 console.log('🔴 yt-dlp terminó de enviar datos (end)');
             });
+            ytdlp.stderr.on('data', (chunk) => {
+                console.log('🔴 yt-dlp stderr:', chunk.toString());
+            });
             ytdlp.on('close', (code) => {
                 console.log('🔴 yt-dlp proceso cerrado con código:', code);
             });
