@@ -387,21 +387,25 @@ class MusicManager {
                     console.log('🔄 Bot detection detectado en buffer, intentando método alternativo...');
                     console.log('🔄 Buffer de errores acumulado:', errorBuffer);
                     
-                    // Intentar con método alternativo sin cookies
-                    const ytdlpAlternative = spawn('yt-dlp', [
-                        '-f', 'bestaudio',
-                        '-o', '-',
-                        '--no-playlist',
-                        '--no-check-certificates',
-                        '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        '--extractor-args', 'youtube:player_client=web',
-                        '--no-cache-dir',
-                        '--no-cookies',
-                        song.url
-                    ], { stdio: ['ignore', 'pipe', 'pipe'] });
-                    
-                    console.log('🔄 Iniciando proceso alternativo sin cookies...');
-                    this.handleYtdlpProcessDirect(ytdlpAlternative, guildId, queue, player, null, '', true, false, 0, Date.now(), song);
+                                            // Intentar con método alternativo usando diferentes opciones
+                        console.log('🔄 Intentando método alternativo con opciones más agresivas...');
+                        
+                        // Método 1: Usar formato más básico y sin cookies
+                        const ytdlpAlternative = spawn('yt-dlp', [
+                            '-f', 'worstaudio',
+                            '-o', '-',
+                            '--no-playlist',
+                            '--no-check-certificates',
+                            '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            '--extractor-args', 'youtube:player_client=web',
+                            '--no-cache-dir',
+                            '--no-cookies',
+                            '--no-warnings',
+                            song.url
+                        ], { stdio: ['ignore', 'pipe', 'pipe'] });
+                        
+                        console.log('🔄 Iniciando proceso alternativo sin cookies...');
+                        this.handleYtdlpProcessDirect(ytdlpAlternative, guildId, queue, player, null, '', true, false, 0, Date.now(), song);
                 }
                 // Verificar si es error de cookies
                 else if (errorBuffer.includes('invalid Netscape format cookies') || errorBuffer.includes('failed to load cookies')) {
@@ -443,8 +447,41 @@ class MusicManager {
                     this.handleYtdlpProcessDirect(ytdlpBasic, guildId, queue, player, null, '', true, false, 0, Date.now(), song);
                 }
                 else {
-                    console.log('❌ Error desconocido, pasando a la siguiente canción');
-                    this.playNext(guildId);
+                    console.log('❌ Error desconocido, intentando método final...');
+                    
+                    // Método final: Usar play-dl como fallback
+                    console.log('🔄 Intentando con play-dl como fallback...');
+                    const play = require('play-dl');
+                    
+                    play.stream(song.url)
+                        .then(stream => {
+                            console.log('🎵 Creando AudioResource con play-dl...');
+                            const resource = createAudioResource(stream.stream, {
+                                inputType: stream.type,
+                                inlineVolume: true
+                            });
+
+                            console.log('🔊 Configurando volumen:', queue.volume / 100);
+                            resource.volume.setVolume(queue.volume / 100);
+                            
+                            console.log('▶️ Iniciando reproducción con play-dl...');
+                            player.play(resource);
+                            queue.playing = true;
+                            console.log('✅ Reproducción iniciada correctamente con play-dl');
+
+                            player.once(AudioPlayerStatus.Idle, () => {
+                                console.log('🛑 AudioPlayerStatus.Idle - Reproducción terminada');
+                            });
+                            
+                            player.on('error', (error) => {
+                                console.error('❌ Error en AudioPlayer:', error);
+                            });
+                        })
+                        .catch(playError => {
+                            console.error('❌ Error con play-dl:', playError);
+                            console.log('❌ Todos los métodos fallaron, pasando a la siguiente canción');
+                            this.playNext(guildId);
+                        });
                 }
             }
         });
