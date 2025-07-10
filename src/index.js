@@ -72,3 +72,6 @@ process.on('unhandledRejection', error => {
 
 // Conectar el bot
 client.login(process.env.DISCORD_TOKEN); 
+
+// Mantener el proceso vivo en Railway
+setInterval(() => {}, 1000 * 60 * 60); 

@@ -141,9 +141,15 @@ class MusicManager {
             ytdlp.stdout.on('data', (chunk) => {
                 console.log('🟢 yt-dlp está enviando datos de audio:', chunk.length);
             });
+            ytdlp.stdout.on('end', () => {
+                console.log('🔴 yt-dlp terminó de enviar datos (end)');
+            });
+            ytdlp.on('close', (code) => {
+                console.log('🔴 yt-dlp proceso cerrado con código:', code);
+            });
 
             const resource = createAudioResource(ytdlp.stdout, {
-                inputType: 'arbitrary', // probar con 'arbitrary' en vez de 'webm/opus'
+                inputType: 'webm/opus', // volver a probar con 'webm/opus'
                 inlineVolume: true
             });
 
