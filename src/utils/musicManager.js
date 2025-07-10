@@ -126,44 +126,60 @@ class MusicManager {
         try {
             console.log('🔗 URL para reproducir (yt-dlp):', song.url);
             // Lanzar yt-dlp como proceso externo para obtener el stream de audio
-            const ytdlp = spawn('yt-dlp', [
+            const ytdlpArgs = [
                 '-f', 'bestaudio[ext=webm][acodec=opus]/bestaudio',
                 '-o', '-', // salida a stdout
                 '--no-playlist',
-                '--cookies', '/app/cookies.txt', // usar cookies.txt exportado
                 song.url
-            ], { stdio: ['ignore', 'pipe', 'pipe'] }); // stderr ahora es 'pipe'
+            ];
+            
+            // Solo agregar cookies si el archivo existe y es válido
+            try {
+                const fs = require('fs');
+                if (fs.existsSync('/app/cookies.txt')) {
+                    ytdlpArgs.push('--cookies', '/app/cookies.txt');
+                    console.log('🍪 Usando archivo de cookies');
+                } else {
+                    console.log('⚠️ Archivo de cookies no encontrado, continuando sin cookies');
+                }
+            } catch (error) {
+                console.log('⚠️ Error al verificar cookies, continuando sin cookies:', error.message);
+            }
+            
+            const ytdlp = spawn('yt-dlp', ytdlpArgs, { stdio: ['ignore', 'pipe', 'pipe'] }); // stderr ahora es 'pipe'
 
             ytdlp.on('error', (err) => {
                 console.error('Error al lanzar yt-dlp:', err);
                 this.playNext(guildId);
             });
 
-            ytdlp.stdout.on('data', (chunk) => {
-                console.log('🟢 yt-dlp está enviando datos de audio:', chunk.length);
-            });
-            ytdlp.stdout.on('end', () => {
-                console.log('🔴 yt-dlp terminó de enviar datos (end)');
-            });
+            // Si yt-dlp falla con cookies, intentar sin cookies
+            let retryWithoutCookies = false;
             ytdlp.stderr.on('data', (chunk) => {
-                console.log('🔴 yt-dlp stderr:', chunk.toString());
-            });
-            ytdlp.on('close', (code) => {
-                console.log('🔴 yt-dlp proceso cerrado con código:', code);
+                const stderr = chunk.toString();
+                console.log('🔴 yt-dlp stderr:', stderr);
+                
+                // Si hay error de cookies, intentar sin cookies
+                if (stderr.includes('invalid Netscape format cookies') || stderr.includes('failed to load cookies')) {
+                    if (!retryWithoutCookies) {
+                        retryWithoutCookies = true;
+                        console.log('🔄 Reintentando sin cookies...');
+                        ytdlp.kill('SIGKILL');
+                        
+                        // Intentar sin cookies
+                        const ytdlpNoCookies = spawn('yt-dlp', [
+                            '-f', 'bestaudio[ext=webm][acodec=opus]/bestaudio',
+                            '-o', '-',
+                            '--no-playlist',
+                            song.url
+                        ], { stdio: ['ignore', 'pipe', 'pipe'] });
+                        
+                        this.handleYtdlpProcess(ytdlpNoCookies, guildId, queue, player);
+                    }
+                }
             });
 
-            const resource = createAudioResource(ytdlp.stdout, {
-                inputType: 'webm/opus', // volver a probar con 'webm/opus'
-                inlineVolume: true
-            });
-
-            resource.volume.setVolume(queue.volume / 100);
-            player.play(resource);
-            queue.playing = true;
-
-            player.once(AudioPlayerStatus.Idle, () => {
-                ytdlp.kill('SIGKILL');
-            });
+            this.handleYtdlpProcess(ytdlp, guildId, queue, player);
 
         } catch (error) {
             console.error('Error al reproducir (yt-dlp):', error);
@@ -267,6 +283,38 @@ class MusicManager {
         this.queues.delete(guildId);
         this.connections.delete(guildId);
         this.players.delete(guildId);
+    }
+
+    // Método para manejar el proceso de yt-dlp
+    handleYtdlpProcess(ytdlp, guildId, queue, player) {
+        ytdlp.stdout.on('data', (chunk) => {
+            console.log('🟢 yt-dlp está enviando datos de audio:', chunk.length);
+        });
+        
+        ytdlp.stdout.on('end', () => {
+            console.log('🔴 yt-dlp terminó de enviar datos (end)');
+        });
+        
+        ytdlp.stderr.on('data', (chunk) => {
+            console.log('🔴 yt-dlp stderr:', chunk.toString());
+        });
+        
+        ytdlp.on('close', (code) => {
+            console.log('🔴 yt-dlp proceso cerrado con código:', code);
+        });
+
+        const resource = createAudioResource(ytdlp.stdout, {
+            inputType: 'webm/opus',
+            inlineVolume: true
+        });
+
+        resource.volume.setVolume(queue.volume / 100);
+        player.play(resource);
+        queue.playing = true;
+
+        player.once(AudioPlayerStatus.Idle, () => {
+            ytdlp.kill('SIGKILL');
+        });
     }
 }
 
