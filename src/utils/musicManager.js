@@ -131,7 +131,7 @@ class MusicManager {
                 '-o', '-', // salida a stdout
                 '--no-playlist',
                 song.url
-            ], { stdio: ['ignore', 'pipe', 'ignore'] });
+            ], { stdio: ['ignore', 'pipe', 'pipe'] }); // stderr ahora es 'pipe'
 
             ytdlp.on('error', (err) => {
                 console.error('Error al lanzar yt-dlp:', err);
