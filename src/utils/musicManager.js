@@ -138,8 +138,12 @@ class MusicManager {
                 this.playNext(guildId);
             });
 
+            ytdlp.stdout.on('data', (chunk) => {
+                console.log('🟢 yt-dlp está enviando datos de audio:', chunk.length);
+            });
+
             const resource = createAudioResource(ytdlp.stdout, {
-                inputType: 'webm/opus',
+                inputType: 'arbitrary', // probar con 'arbitrary' en vez de 'webm/opus'
                 inlineVolume: true
             });
 
