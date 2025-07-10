@@ -6,7 +6,15 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "deploy": "node src/deploy-commands.js"
+    "deploy": "node src/deploy-commands.js",
+    "pm2:start": "pm2 start src/index.js --name jebediah-bot",
+    "pm2:stop": "pm2 stop jebediah-bot",
+    "pm2:restart": "pm2 restart jebediah-bot",
+    "pm2:logs": "pm2 logs jebediah-bot",
+    "pm2:monit": "pm2 monit",
+    "forever:start": "forever start src/index.js",
+    "forever:stop": "forever stop src/index.js",
+    "forever:restart": "forever restart src/index.js"
   },
   "keywords": [
     "discord",
