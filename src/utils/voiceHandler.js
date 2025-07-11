@@ -11,7 +11,7 @@ class VoiceHandler extends EventEmitter {
         super();
         // Configurar Google Speech-to-Text con el archivo específico
         this.speechClient = new speech.SpeechClient({
-            keyFilename: './jebediah-a549271db02b.json'
+            keyFilename: './jebediah-4eb489321355.json'
         });
         
         this.hotword = 'jebe';
