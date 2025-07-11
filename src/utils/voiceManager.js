@@ -100,6 +100,11 @@ class VoiceManager extends EventEmitter {
         return this.players.get(guildId);
     }
 
+    // Obtener conexión
+    getConnection(guildId) {
+        return this.connections.get(guildId);
+    }
+
     // Verificar si está conectado
     isConnected(guildId, client = null) {
         const connection = this.connections.get(guildId);

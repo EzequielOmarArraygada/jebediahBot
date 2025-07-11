@@ -91,8 +91,16 @@ module.exports = {
             }
 
             // Conectar al canal de voz si no está conectado
-            if (!musicManager.connections.has(guildId)) {
-                await musicManager.joinVoiceChannel(voiceChannel);
+            if (!musicManager.hasConnection(guildId)) {
+                // Verificar si hay una conexión del VoiceManager disponible
+                const voiceManagerConnection = voiceManager.getConnection(guildId);
+                if (voiceManagerConnection) {
+                    // Usar la conexión existente del VoiceManager
+                    await musicManager.joinVoiceChannel(voiceChannel, voiceManagerConnection);
+                } else {
+                    // Crear nueva conexión
+                    await musicManager.joinVoiceChannel(voiceChannel);
+                }
             }
 
             // Agregar a la cola

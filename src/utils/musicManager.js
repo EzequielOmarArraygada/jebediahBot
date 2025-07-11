@@ -39,7 +39,7 @@ class MusicManager {
     }
 
     // Conectar al canal de voz
-    async joinVoiceChannel(channel) {
+    async joinVoiceChannel(channel, existingConnection = null) {
         const guildId = channel.guild.id;
         
         // Si ya está conectado, desconectar primero
@@ -47,50 +47,79 @@ class MusicManager {
             this.connections.get(guildId).destroy();
         }
 
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-            selfDeaf: false,
-            selfMute: false
-        });
+        let connection;
+        let player;
 
-        const player = createAudioPlayer();
-        
-        connection.on(VoiceConnectionStatus.Ready, () => {
-            console.log(`✅ Conectado al canal de voz: ${channel.name}`);
-        });
+        if (existingConnection) {
+            // Usar conexión existente (del VoiceManager)
+            connection = existingConnection;
+            player = createAudioPlayer();
+            
+            // Configurar eventos del reproductor
+            player.on(AudioPlayerStatus.Idle, () => {
+                this.playNext(guildId);
+            });
 
-        connection.on(VoiceConnectionStatus.Disconnected, async () => {
-            try {
-                await Promise.race([
-                    entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
-                    entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
-                ]);
-            } catch (error) {
-                connection.destroy();
-                this.connections.delete(guildId);
-                this.players.delete(guildId);
-                console.log(`❌ Desconectado del canal de voz: ${channel.name}`);
-            }
-        });
+            player.on(AudioPlayerStatus.Playing, () => {
+                const queue = this.getQueue(guildId);
+                queue.playing = true;
+            });
 
-        connection.subscribe(player);
+            player.on('error', error => {
+                console.error('Error en el reproductor de audio:', error);
+                this.playNext(guildId);
+            });
 
-        // Configurar eventos del reproductor
-        player.on(AudioPlayerStatus.Idle, () => {
-            this.playNext(guildId);
-        });
+            connection.subscribe(player);
+            
+            console.log(`✅ Usando conexión existente para reproducción de música`);
+        } else {
+            // Crear nueva conexión
+            connection = joinVoiceChannel({
+                channelId: channel.id,
+                guildId: channel.guild.id,
+                adapterCreator: channel.guild.voiceAdapterCreator,
+                selfDeaf: false,
+                selfMute: false
+            });
 
-        player.on(AudioPlayerStatus.Playing, () => {
-            const queue = this.getQueue(guildId);
-            queue.playing = true;
-        });
+            player = createAudioPlayer();
+            
+            connection.on(VoiceConnectionStatus.Ready, () => {
+                console.log(`✅ Conectado al canal de voz: ${channel.name}`);
+            });
 
-        player.on('error', error => {
-            console.error('Error en el reproductor de audio:', error);
-            this.playNext(guildId);
-        });
+            connection.on(VoiceConnectionStatus.Disconnected, async () => {
+                try {
+                    await Promise.race([
+                        entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
+                        entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
+                    ]);
+                } catch (error) {
+                    connection.destroy();
+                    this.connections.delete(guildId);
+                    this.players.delete(guildId);
+                    console.log(`❌ Desconectado del canal de voz: ${channel.name}`);
+                }
+            });
+
+            // Configurar eventos del reproductor
+            player.on(AudioPlayerStatus.Idle, () => {
+                this.playNext(guildId);
+            });
+
+            player.on(AudioPlayerStatus.Playing, () => {
+                const queue = this.getQueue(guildId);
+                queue.playing = true;
+            });
+
+            player.on('error', error => {
+                console.error('Error en el reproductor de audio:', error);
+                this.playNext(guildId);
+            });
+
+            connection.subscribe(player);
+        }
 
         this.connections.set(guildId, connection);
         this.players.set(guildId, player);
@@ -247,6 +276,11 @@ class MusicManager {
             volume: queue.volume,
             loop: queue.loop
         };
+    }
+
+    // Verificar si ya hay una conexión activa
+    hasConnection(guildId) {
+        return this.connections.has(guildId);
     }
 
     // Limpiar recursos al desconectar
